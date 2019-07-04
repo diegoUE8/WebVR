@@ -1,0 +1,34 @@
+﻿{
+	"targets": {
+		"browser": {
+			"compile": [{
+				"input": "src/sass/webvrgulp.scss",
+				"output": "docs/css/webvr.css",
+				"minify": false
+			}, {
+				"input": "src/js/webvr.js",
+				"output": "docs/js/webvr.js",
+				"minify": false
+			}],
+			"bundle": [{
+				"input": [
+					"node_modules/gsap/src/uncompressed/easing/EasePack.js",
+					"node_modules/gsap/src/uncompressed/TweenMax.js",
+					"node_modules/three/build/three.js",
+					"node_modules/three/examples/js/vr/WebVR.js",
+					"node_modules/three/examples/js/modifiers/SubdivisionModifier.js",
+					"node_modules/three/examples/js/loaders/OBJLoader.js"
+				],
+				"output": "docs/js/webvr-vendors.js",
+				"minify": true
+			}]
+		}
+	},
+	"options": {
+		"tfs": false,
+		"server": {
+			"src": "./docs",
+			"port": 45000
+		}
+	}
+}

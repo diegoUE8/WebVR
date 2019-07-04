@@ -1,0 +1,126 @@
+body {
+	margin: 0;
+	padding: 0;
+	font-family: 'Roboto';
+	font-size: 16px;
+	line-height: 1.2;
+}
+
+.webvr {
+	position: relative;
+	width: 100%;
+	background: black;
+}
+
+.webvr__shadow {
+	display: none;
+}
+
+.webvr__container {
+	display: block;
+
+	canvas {
+		display: block;
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: black;
+	}
+}
+
+.webvr__headline {
+	position: relative;
+	user-select: none;
+
+	.container {
+		padding: 15px;
+		max-width: 500px;
+	}
+
+	.title {
+		font-size: 40px;
+		font-weight: 700;
+		line-height: 50px;
+		text-transform: uppercase;
+		color: #333;
+		opacity: 0;
+	}
+
+	.abstract {
+		display: inline-block;
+		font-size: 26px;
+		font-weight: 700;
+		color: #333;
+		border-top: 4px solid #333;
+		padding-top: 15px;
+		padding-right: 50px;
+		margin-top: 10px;
+		opacity: 0;
+	}
+}
+
+.webvr {
+	min-height: 100vh;
+	overflow: hidden;
+}
+
+.webvr__container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.panel {
+	position: absolute;
+	box-sizing: border-box;
+	top: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	width: 512px;
+	min-height: 512px;
+	padding: 80px;
+	border-radius: 60px;
+	text-align: center;
+	background: rgba(0, 0, 0, 0.8);
+	color: white;
+
+	.title {
+		font-size: 50px;
+		font-weight: 600;
+		line-height: 1.5;
+	}
+
+	.abstract {
+		font-size: 30px;
+		line-height: 1.2;
+	}
+}
+
+.debug__info {
+	position: absolute;
+	left: 20px;
+	bottom: 20px;
+	padding: 8px 8px;
+	border-radius: 3px;
+	font-size: 13px;
+	font-weight: 600;
+	background: rgba(255, 255, 255, 0.9);
+	color: black;
+}
+
+.debug__save {
+	position: absolute;
+	right: 20px;
+	bottom: 20px;
+	padding: 8px 8px;
+	border-radius: 3px;
+	font-size: 13px;
+	font-weight: 600;
+	background: rgba(255, 255, 255, 0.9);
+	color: black;
+}

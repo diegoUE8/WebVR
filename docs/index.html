@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" ng-app>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<title>webvr</title>
+	<meta name="Content-Language" content="en" />
+	<meta name="robots" content="noindex,nofollow" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+	<meta name="apple-mobile-web-app-title" content="webvr">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="mobile-web-app-capable" content="yes">
+	<link href="favicon.ico" rel="shortcut icon" type="image/ico" />
+	<link href="https://fonts.googleapis.com/css?family=Roboto:300,700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="css/webvr.css" />
+	<script type="x-shader/x-vertex" id="vertexshader">
+		attribute float size;
+		attribute vec3 customColor;
+		varying vec3 vColor;
+		void main() {
+			vColor = customColor;
+			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+			gl_PointSize = size * ( 300.0 / -mvPosition.z );
+			gl_Position = projectionMatrix * mvPosition;
+		}
+	</script>
+	<script type="x-shader/x-fragment" id="fragmentshader">
+		uniform vec3 color;
+		uniform sampler2D texture;
+		varying vec3 vColor;
+		void main() {
+			gl_FragColor = vec4( color * vColor, 1.0 );
+			gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+			if ( gl_FragColor.a < ALPHATEST ) discard;
+		}
+	</script>
+</head>
+
+<body>
+	<div class="page">
+		<!-- webvr -->
+		<section class="section webvr">
+			<div class="webvr__container"></div>
+			<div class="debug__info"></div>
+			<div class="debug__save">save</div>
+			<!--
+			<div class="webvr__headline">
+				<div class="container">
+					<div class="title">Complicare è facile,<br>semplificare è difficile</div>
+					<div class="abstract">Bruno Munari</div>
+				</div>
+			</div>
+			<div class="webvr__shadow">
+				<img src="img/shadow-256.png" />
+			</div>
+			-->
+			<div class="panel" id="panel">
+				<div class="title">Title</div>
+				<div class="abstract">Lorem ipsum dolor sit amet</div>
+			</div>
+		</section>
+		<!-- webvr -->
+	</div>
+	<script src="js/webvr-vendors.min.js"></script>
+	<script src="js/webvr.js"></script>
+</body>
+
+</html>
