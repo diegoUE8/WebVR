@@ -35,12 +35,26 @@ class webvr {
 
 		const geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
 		const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-		const cube = this.cube = new THREE.Mesh(geometry, material);
+		const cube = this.cube = new InteractiveMesh(geometry, material);
 		cube.position.set(0, 0, -5);
+		cube.on('over', () => {
+			cube.material.color.setHex(0xff0000);
+		});
+		cube.on('out', () => {
+			cube.material.color.setHex(0x00ff00);
+		});
+		cube.on('down', () => {
+			cube.material.color.setHex(0xffffff);
+		});
+		cube.on('up', () => {
+			cube.material.color.setHex(0x0000ff);
+		});
 		scene.add(cube);
 
 		const light = new THREE.HemisphereLight(0xffffff, 0x000000, 1);
 		scene.add(light);
+
+		const raycaster = this.raycaster = new THREE.Raycaster();
 
 		const renderer = this.renderer = new THREE.WebGLRenderer();
 		renderer.setClearColor(0x666666, 1);
@@ -58,14 +72,57 @@ class webvr {
 
 		if (this.vr.mode !== VR_MODE.NONE) {
 			const controllers = this.controllers = new Controllers(renderer, scene, pivot);
-
 		}
-		console.log(this.vr.mode);
 
 		this.container.appendChild(renderer.domElement);
-
 		this.onWindowResize = this.onWindowResize.bind(this);
 		window.addEventListener('resize', this.onWindowResize, false);
+	}
+
+	updateRaycaster() {
+		try {
+			const controllers = this.controllers;
+			const controller = controllers.controller;
+			if (controller) {
+				const raycaster = this.raycaster;
+				const position = controller.position;
+				const rotation = controller.getWorldDirection(controllers.controllerDirection).multiplyScalar(-1);
+				raycaster.set(position, rotation);
+				const hit = InteractiveMesh.hittest(raycaster, controllers.gamepads.button);
+				/*
+				if (hit) {
+					controllers.hapticFeedback();
+				}
+				*/
+			}
+		} catch (error) {
+			this.debugInfo.innerHTML = error;
+		}
+	}
+
+	render(delta) {
+		try {
+			this.cube.rotation.y += Math.PI / 180 * 5;
+			this.cube.rotation.x += Math.PI / 180 * 1;
+			const s = 1 + Math.cos(this.i * 0.1) * 0.5;
+			this.cube.scale.set(s, s, s);
+			if (this.controllers) {
+				this.controllers.update();
+			}
+			this.updateRaycaster();
+			const renderer = this.renderer;
+			renderer.render(this.scene, this.camera);
+			this.i++;
+		} catch (error) {
+			this.debugInfo.innerHTML = error;
+		}
+	}
+
+	animate() {
+		const renderer = this.renderer;
+		renderer.setAnimationLoop(() => {
+			this.render();
+		});
 	}
 
 	onWindowResize() {
@@ -82,30 +139,6 @@ class webvr {
 				camera.aspect = width / height;
 				camera.updateProjectionMatrix();
 			}
-		} catch (error) {
-			this.debugInfo.innerHTML = error;
-		}
-	}
-
-	animate() {
-		const renderer = this.renderer;
-		renderer.setAnimationLoop(() => {
-			this.render();
-		});
-	}
-
-	render(delta) {
-		try {
-			this.cube.rotation.y += Math.PI / 180 * 5;
-			this.cube.rotation.x += Math.PI / 180 * 1;
-			const s = 1 + Math.cos(this.i * 0.1) * 0.5;
-			this.cube.scale.set(s, s, s);
-			if (this.controllers) {
-				this.controllers.update();
-			}
-			const renderer = this.renderer;
-			renderer.render(this.scene, this.camera);
-			this.i++;
 		} catch (error) {
 			this.debugInfo.innerHTML = error;
 		}

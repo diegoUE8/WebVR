@@ -12153,11 +12153,24 @@ function () {
       var material = new THREE.MeshStandardMaterial({
         color: 0x00ff00
       });
-      var cube = this.cube = new THREE.Mesh(geometry, material);
+      var cube = this.cube = new _interactive.default(geometry, material);
       cube.position.set(0, 0, -5);
+      cube.on('over', function () {
+        cube.material.color.setHex(0xff0000);
+      });
+      cube.on('out', function () {
+        cube.material.color.setHex(0x00ff00);
+      });
+      cube.on('down', function () {
+        cube.material.color.setHex(0xffffff);
+      });
+      cube.on('up', function () {
+        cube.material.color.setHex(0x0000ff);
+      });
       scene.add(cube);
       var light = new THREE.HemisphereLight(0xffffff, 0x000000, 1);
       scene.add(light);
+      var raycaster = this.raycaster = new THREE.Raycaster();
       var renderer = this.renderer = new THREE.WebGLRenderer();
       renderer.setClearColor(0x666666, 1);
       renderer.setPixelRatio(window.devicePixelRatio);
@@ -12176,10 +12189,65 @@ function () {
         var controllers = this.controllers = new _controllers.default(renderer, scene, pivot);
       }
 
-      console.log(this.vr.mode);
       this.container.appendChild(renderer.domElement);
       this.onWindowResize = this.onWindowResize.bind(this);
       window.addEventListener('resize', this.onWindowResize, false);
+    }
+  }, {
+    key: "updateRaycaster",
+    value: function updateRaycaster() {
+      try {
+        var controllers = this.controllers;
+        var controller = controllers.controller;
+
+        if (controller) {
+          var raycaster = this.raycaster;
+          var position = controller.position;
+          var rotation = controller.getWorldDirection(controllers.controllerDirection).multiplyScalar(-1);
+          raycaster.set(position, rotation);
+
+          var hit = _interactive.default.hittest(raycaster, controllers.gamepads.button);
+          /*
+          if (hit) {
+          	controllers.hapticFeedback();
+          }
+          */
+
+        }
+      } catch (error) {
+        this.debugInfo.innerHTML = error;
+      }
+    }
+  }, {
+    key: "render",
+    value: function render(delta) {
+      try {
+        this.cube.rotation.y += Math.PI / 180 * 5;
+        this.cube.rotation.x += Math.PI / 180 * 1;
+        var s = 1 + Math.cos(this.i * 0.1) * 0.5;
+        this.cube.scale.set(s, s, s);
+
+        if (this.controllers) {
+          this.controllers.update();
+        }
+
+        this.updateRaycaster();
+        var renderer = this.renderer;
+        renderer.render(this.scene, this.camera);
+        this.i++;
+      } catch (error) {
+        this.debugInfo.innerHTML = error;
+      }
+    }
+  }, {
+    key: "animate",
+    value: function animate() {
+      var _this2 = this;
+
+      var renderer = this.renderer;
+      renderer.setAnimationLoop(function () {
+        _this2.render();
+      });
     }
   }, {
     key: "onWindowResize",
@@ -12199,36 +12267,6 @@ function () {
           camera.aspect = width / height;
           camera.updateProjectionMatrix();
         }
-      } catch (error) {
-        this.debugInfo.innerHTML = error;
-      }
-    }
-  }, {
-    key: "animate",
-    value: function animate() {
-      var _this2 = this;
-
-      var renderer = this.renderer;
-      renderer.setAnimationLoop(function () {
-        _this2.render();
-      });
-    }
-  }, {
-    key: "render",
-    value: function render(delta) {
-      try {
-        this.cube.rotation.y += Math.PI / 180 * 5;
-        this.cube.rotation.x += Math.PI / 180 * 1;
-        var s = 1 + Math.cos(this.i * 0.1) * 0.5;
-        this.cube.scale.set(s, s, s);
-
-        if (this.controllers) {
-          this.controllers.update();
-        }
-
-        var renderer = this.renderer;
-        renderer.render(this.scene, this.camera);
-        this.i++;
       } catch (error) {
         this.debugInfo.innerHTML = error;
       }
