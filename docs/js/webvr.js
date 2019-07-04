@@ -11103,24 +11103,6 @@ function (_Emittable) {
     _this.pivot = pivot;
     _this.controllerDirection = new THREE.Vector3();
 
-    if (_const.TEST_ENABLED) {
-      var right = _this.right = _this.addControllerTest(scene);
-
-      document.addEventListener('mousedown', _this.onRightSelectStart);
-      document.addEventListener('mouseup', _this.onRightSelectEnd);
-      var group = new THREE.Group();
-      var menu = _this.menu = new _menu.default(group);
-      menu.on('down', function (event) {
-        _this.onMenuDown(event);
-      });
-      group.rotation.set(Math.PI / 2, 0, 0);
-      group.position.set(0, 0, -2);
-      group.scale.set(5, 5, 5);
-      pivot.add(group);
-    }
-
-    console.log('controllers');
-
     var text = _this.text = _this.addText(pivot);
 
     var gamepads = _this.gamepads = _this.addGamepads();
@@ -11144,10 +11126,6 @@ function (_Emittable) {
 
         if (gamepad.hand === _gamepads.GAMEPAD_HANDS.LEFT) {
           _this2.left = controller;
-          var menu = _this2.menu = new _menu.default(controller);
-          menu.on('down', function (event) {
-            _this2.onMenuDown(event);
-          });
         } else {
           _this2.right = controller;
         }
@@ -11170,17 +11148,12 @@ function (_Emittable) {
             // 0 trigger, 1 front, 2 side, 3 Y, 4 X
             switch (button.index) {
               case 1:
-                _this2.menu.exit();
-
                 break;
 
               case 2:
-                _this2.menu.enter();
-
                 break;
 
               case 3:
-                // this.menu.next();
                 break;
             }
 
@@ -11218,86 +11191,9 @@ function (_Emittable) {
       }
     }
   }, {
-    key: "onMenuDown",
-    value: function onMenuDown(event) {
-      var _this3 = this;
-
-      var item = event.item;
-      var index = event.index; // console.log('Controllers.onMenuDown', item, index);
-
-      if (index === 0 || index === 2) {
-        var direction = index === 0 ? -1 : 1;
-        var y = this.pivot.rotation.y + Math.PI / 2 * direction; // this.pivot.ery = y;
-
-        this.pivot.busy = true;
-        TweenMax.to(this.pivot.rotation, 0.7, {
-          y: y,
-          ease: Power2.easeInOut,
-          onComplete: function onComplete() {
-            _this3.pivot.busy = false;
-          }
-        });
-      } else if (index === 1) {
-        var panel = this.menu.addPanel();
-
-        if (panel) {
-          this.menu.panel = panel;
-          this.menu.next();
-          this.menu.appear(panel);
-        }
-      }
-    }
-  }, {
-    key: "hapticFeedback",
-    value: function hapticFeedback() {
-      return;
-      var gamepad = this.findGamepad_(this.controller.index);
-
-      if (gamepad) {
-        // console.log('start');
-
-        /*
-        if (Tone.context.state === 'running') {
-        	const feedback = this.feedback = (this.feedback || new Tone.Player('audio/feedback.mp3').toMaster());
-        	feedback.start();
-        }
-        */
-        return; // !!! care for battery
-
-        var actuators = gamepad.hapticActuators;
-
-        if (actuators && actuators.length) {
-          return actuators[0].pulse(0.1, 50);
-        } else {
-          return Promise.reject();
-        }
-      }
-    }
-  }, {
     key: "update",
     value: function update() {
       this.gamepads.update();
-    }
-  }, {
-    key: "updateTest",
-    value: function updateTest(mouse) {
-      var controller = this.controller;
-
-      if (controller) {
-        controller.rotation.y = -mouse.x * Math.PI;
-        controller.rotation.x = mouse.y * Math.PI / 2;
-      }
-    }
-  }, {
-    key: "addControllerTest",
-    value: function addControllerTest(scene) {
-      var controller = new THREE.Group();
-      controller.position.set(0, 0, 0);
-      controller.index = 0;
-      var cylinder = controller.cylinder = this.addControllerModel(controller, _gamepads.GAMEPAD_HANDS.RIGHT);
-      controller.scale.set(5, 5, 5);
-      scene.add(controller);
-      return controller;
     }
   }, {
     key: "addController",
@@ -11389,11 +11285,11 @@ function (_Emittable) {
   }, {
     key: "addText",
     value: function addText(parent) {
-      var _this4 = this;
+      var _this3 = this;
 
       var loader = new THREE.FontLoader();
       loader.load('fonts/helvetiker_regular.typeface.json', function (font) {
-        _this4.font = font;
+        _this3.font = font;
         var material = new THREE.MeshBasicMaterial({
           color: 0x111111,
           // 0x33c5f6,
@@ -11401,7 +11297,7 @@ function (_Emittable) {
           opacity: 1,
           side: THREE.DoubleSide
         });
-        _this4.fontMaterial = material;
+        _this3.fontMaterial = material;
       });
     }
   }, {
@@ -11425,35 +11321,6 @@ function (_Emittable) {
         text.position.set(0, 0, -_const.POINTER_RADIUS);
         this.text = text;
         this.pivot.add(text);
-      }
-    }
-  }, {
-    key: "findGamepad_",
-    value: function findGamepad_(id) {
-      // !!! fix
-      var gamepad = this.gamepads_[id];
-
-      if (gamepad) {
-        return gamepad;
-      }
-
-      var gamepads = navigator.getGamepads && navigator.getGamepads();
-
-      if (!gamepads) {
-        return undefined;
-      }
-
-      for (var i = 0, j = 0, l = gamepads.length; i < l; i++) {
-        gamepad = gamepads[i];
-
-        if (gamepad && (gamepad.id === 'Daydream Controller' || gamepad.id === 'Gear VR Controller' || gamepad.id === 'Oculus Go Controller' || gamepad.id === 'OpenVR Gamepad' || gamepad.id.startsWith('Oculus Touch') || gamepad.id.startsWith('Spatial Controller'))) {
-          if (j === id) {
-            this.gamepads_[id] = gamepad;
-            return gamepad;
-          }
-
-          j++;
-        }
       }
     }
   }]);
@@ -12229,17 +12096,15 @@ var _const = require("./const");
 
 var _interactive = _interopRequireDefault(require("./interactive/interactive.mesh"));
 
-var _orbit2 = _interopRequireDefault(require("./orbit/orbit"));
+var _orbit = _interopRequireDefault(require("./orbit/orbit"));
 
 var _views = _interopRequireDefault(require("./views/views"));
 
-var _controllers2 = _interopRequireDefault(require("./vr/controllers"));
+var _controllers = _interopRequireDefault(require("./vr/controllers"));
 
 var _vr = require("./vr/vr");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -12304,11 +12169,12 @@ function () {
         _this.debugInfo.innerHTML = error;
       });
       container.appendChild(vr.element);
-      /*
-      if (this.vr.mode !== VR_MODE.NONE) {
-      	
+      var pivot = new THREE.Group();
+      scene.add(pivot);
+
+      if (this.vr.mode !== _vr.VR_MODE.NONE) {
+        var controllers = this.controllers = new _controllers.default(renderer, scene, pivot);
       }
-      */
 
       console.log(this.vr.mode);
       this.container.appendChild(renderer.domElement);
@@ -12355,6 +12221,11 @@ function () {
         this.cube.rotation.x += Math.PI / 180 * 1;
         var s = 1 + Math.cos(this.i * 0.1) * 0.5;
         this.cube.scale.set(s, s, s);
+
+        if (this.controllers) {
+          this.controllers.update();
+        }
+
         var renderer = this.renderer;
         renderer.render(this.scene, this.camera);
         this.i++;
@@ -12362,806 +12233,13 @@ function () {
         this.debugInfo.innerHTML = error;
       }
     }
-  }, {
-    key: "render_",
-    value: function render_(delta) {
-      try {
-        var cameraDirection = this.camera.getWorldDirection(this.cameraDirection);
-
-        if (this.vr.mode !== _vr.VR_MODE.NONE) {
-          // this.dragListener.move();
-          this.controllers.update();
-          this.updateController();
-          /*
-          this.topBar.active = this.controllers.controller && this.pointer.position.y > 15;
-          this.topBar.update(cameraDirection);
-          */
-        } else if (_const.TEST_ENABLED) {
-          // this.dragListener.move();
-          this.updateCamera();
-          this.updateController();
-          /*
-          this.topBar.active = this.controllers.controller && this.pointer.position.y > 15;
-          this.topBar.update(cameraDirection);
-          */
-        } else {
-          this.updateCamera();
-        }
-      } catch (error) {
-        this.debugInfo.innerHTML = error;
-      }
-
-      var renderer = this.renderer;
-      renderer.render(this.scene, this.camera);
-    }
-  }, {
-    key: "init_",
-    value: function init_() {
-      var _this3 = this;
-
-      var section = this.section = document.querySelector('.webvr');
-      var container = this.container = section.querySelector('.webvr__container');
-      var debugInfo = this.debugInfo = section.querySelector('.debug__info');
-      var debugSave = this.debugSave = section.querySelector('.debug__save');
-      this.onWindowResize = this.onWindowResize.bind(this);
-      this.onKeyDown = this.onKeyDown.bind(this);
-      this.onMouseDown = this.onMouseDown.bind(this);
-      this.onMouseMove = this.onMouseMove.bind(this);
-      this.onMouseUp = this.onMouseUp.bind(this);
-      this.onMouseWheel = this.onMouseWheel.bind(this);
-      this.onSave = this.onSave.bind(this);
-      var scene = this.scene = this.addScene();
-      var camera = this.camera = this.addCamera();
-      var pivot = this.pivot = new _views.default(scene);
-      pivot.on('onEnterView', function (view) {
-        if (_this3.orbit) {
-          _this3.orbit.setOrientation(view.orientation);
-        }
-      });
-      pivot.on('pointDown', function (point) {
-        var position = point.position;
-        var debugInfo = "down => {".concat(position.x, ", ").concat(position.y, ", ").concat(position.z, "}");
-        _this3.debugInfo.innerHTML = debugInfo;
-      });
-      var renderer = this.renderer = this.addRenderer(); // container.appendChild(WEBVR.createButton(renderer, { referenceSpaceType: 'local' }));
-
-      var vr = this.vr = this.addVR(renderer, container); // this.addIO();
-
-      console.log('vr.mode', vr.mode, _const.TEST_ENABLED);
-
-      if (vr.mode !== _vr.VR_MODE.NONE) {
-        try {
-          var controllers = this.controllers = new _controllers2.default(renderer, scene, pivot); // const topBar = this.topBar = new TopBar(pivot);
-
-          var pointer = this.pointer = this.addPointer(pivot);
-          this.addPointerListeners();
-        } catch (error) {
-          this.debugInfo.innerHTML = error;
-        }
-      } else if (_const.TEST_ENABLED) {
-        var _controllers = this.controllers = new _controllers2.default(renderer, scene, pivot); // const topBar = this.topBar = new TopBar(pivot);
-
-
-        var _pointer = this.pointer = this.addPointer(pivot);
-
-        this.addPointerListeners();
-        camera.target.z = _const.ROOM_RADIUS;
-        camera.lookAt(camera.target);
-        var orbit = this.orbit = new _orbit2.default();
-        var dragListener = this.dragListener = orbit.setDragListener(container);
-      } else {
-        camera.target.z = _const.ROOM_RADIUS;
-        camera.lookAt(camera.target);
-
-        var _orbit = this.orbit = new _orbit2.default();
-
-        var _dragListener = this.dragListener = _orbit.setDragListener(container);
-      } // raycaster
-
-
-      var raycaster = this.raycaster = new THREE.Raycaster();
-      window.addEventListener('resize', this.onWindowResize, false);
-      window.addEventListener('keydown', this.onKeyDown, false);
-      document.addEventListener('mousemove', this.onMouseMove, false);
-      document.addEventListener('wheel', this.onMouseWheel, false);
-      this.container.addEventListener('mousedown', this.onMouseDown, false);
-      this.container.addEventListener('mouseup', this.onMouseUp, false);
-      this.debugSave.addEventListener('click', this.onSave, false);
-      this.section.classList.add('init');
-      this.onWindowResize();
-    }
-  }, {
-    key: "load",
-    value: function load(jsonUrl) {
-      var _this4 = this;
-
-      try {
-        fetch(jsonUrl).then(function (response) {
-          return response.json();
-        }).then(function (response) {
-          _this4.pivot.views = response.views;
-        });
-      } catch (error) {
-        this.debugInfo.innerHTML = error;
-      }
-    }
-  }, {
-    key: "addRenderer",
-    value: function addRenderer() {
-      var renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        localClippingEnabled: true // logarithmicDepthBuffer: true,
-        // premultipliedAlpha: true,
-        // alpha: true,
-
-      });
-      this.renderer = renderer; // renderer.shadowMap.enabled = true;
-
-      renderer.setClearColor(0x000000, 1);
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.vr.enabled = true; // container.innerHTML = '';
-
-      this.container.appendChild(renderer.domElement);
-      return renderer;
-    }
-  }, {
-    key: "addScene",
-    value: function addScene() {
-      var scene = new THREE.Scene(); // scene.background = new THREE.Color(0x00000000);
-      // scene.background = new THREE.Color(0x404040);
-      // scene.fog = new THREE.Fog(scene.background, 10, 700);
-
-      return scene;
-    }
-  }, {
-    key: "addCamera",
-    value: function addCamera() {
-      var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, _const.ROOM_RADIUS * 2);
-      camera.target = new THREE.Vector3();
-      return camera;
-    }
-  }, {
-    key: "addVR",
-    value: function addVR(renderer, container) {
-      var _this5 = this;
-
-      var vr = new _vr.VR(renderer, {
-        referenceSpaceType: 'local'
-      }, function (error) {
-        _this5.debugInfo.innerHTML = error;
-      });
-      container.appendChild(vr.element);
-      return vr;
-    }
-  }, {
-    key: "addPointer",
-    value: function addPointer(parent) {
-      // size 2 about 20 cm radius
-      var geometry = new THREE.PlaneBufferGeometry(1.2, 1.2, 2, 2); // const geometry = new THREE.SphereBufferGeometry(1, 8, 8);
-
-      var loader = new THREE.TextureLoader();
-      var texture = loader.load('img/pin.png'); // texture.magFilter = THREE.NearestFilter;
-      // texture.wrapT = THREE.RepeatWrapping;
-      // texture.repeat.y = 1;
-      // texture.anisotropy = 0;
-      // texture.magFilter = THREE.LinearMipMapLinearFilter;
-      // texture.minFilter = THREE.NearestFilter;
-
-      var material = new THREE.MeshBasicMaterial({
-        // color: 0xff0000,
-        map: texture,
-        // alphaMap: texture,
-        // alphaTest: 0.5,
-        // blending: THREE.AdditiveBlending,
-        // depthTest: false,
-        transparent: true,
-        opacity: 0.9 // side: THREE.DoubleSide,
-
-      });
-      /*
-      THREE.NoBlending
-      THREE.NormalBlending
-      THREE.AdditiveBlending
-      THREE.SubtractiveBlending
-      THREE.MultiplyBlending
-      THREE.CustomBlending
-      */
-      // material.blending = THREE.AdditiveBlending;
-
-      /*
-            material.blending = THREE.CustomBlending;
-      material.blendEquation = THREE.MaxEquation; //default
-      material.blendSrc = THREE.OneFactor; // THREE.SrcAlphaFactor; //default
-            material.blendDst = THREE.OneFactor; // THREE.OneMinusSrcAlphaFactor; //default
-            */
-
-      var mesh = new THREE.Mesh(geometry, material);
-      mesh.renderOrder = 1000; // mesh.position.x = 100000;
-
-      mesh.position.set(-100000, -100000, -100000); // mesh.geometry.rotateX(Math.PI);
-      // mesh.lookAt(ORIGIN);
-      // mesh.lookAt(this.camera.position);
-
-      parent.add(mesh);
-      return mesh;
-    }
-  }, {
-    key: "addPointerListeners",
-    value: function addPointerListeners() {
-      var pivot = this.pivot;
-      var pointer = this.pointer;
-      var sphere = pivot.room.sphere;
-      sphere.on('hit', function (sphere) {
-        var intersection = sphere.intersection;
-        var position = intersection.point.normalize().multiplyScalar(_const.POINTER_RADIUS);
-        position = pivot.worldToLocal(position);
-        pointer.position.set(position.x, position.y, position.z);
-        pointer.lookAt(_const.ORIGIN); // console.log(position.x, position.y, position.z);
-
-        pointer.scale.setScalar(pivot.busy ? 0 : 1);
-      });
-      sphere.on('down', function (sphere) {
-        pointer.material.color.setHex(0x0000ff);
-        pointer.material.opacity = 1.0;
-        pointer.material.needsUpdate = true;
-      });
-      sphere.on('up', function (sphere) {
-        pointer.material.color.setHex(0xffffff);
-        pointer.material.opacity = 0.9;
-        pointer.material.needsUpdate = true;
-      });
-    }
-  }, {
-    key: "addIO",
-    value: function addIO() {
-      var _this6 = this;
-
-      var rr = function rr() {
-        return -20 + Math.random() * 40;
-      };
-
-      var ims = this.ims = new Array(10).fill(null).map(function (x) {
-        var im = new _interactive.default();
-        im.position.set(rr(), 0, rr());
-        im.on('over', function (item) {
-          item.material.color.setHex(0xff0000);
-        });
-        im.on('out', function (item) {
-          item.material.color.setHex(0xff00ff);
-        });
-        im.on('down', function (item) {
-          item.material.color.setHex(0x00ff00);
-        });
-        im.on('up', function (item) {
-          item.material.color.setHex(0xff00ff);
-        });
-
-        _this6.pivot.add(im);
-
-        return im;
-      });
-    } // events
-
-  }, {
-    key: "onWindowResize_",
-    value: function onWindowResize_() {
-      try {
-        var container = this.container,
-            renderer = this.renderer,
-            camera = this.camera;
-        var size = this.size;
-        size.width = container.offsetWidth;
-        size.height = container.offsetHeight;
-        size.aspect = size.width / size.height;
-
-        if (renderer) {
-          renderer.setSize(size.width, size.height);
-        }
-
-        if (camera) {
-          camera.aspect = size.width / size.height;
-          camera.updateProjectionMatrix();
-        }
-      } catch (error) {
-        this.debugInfo.innerHTML = error;
-      }
-    }
-  }, {
-    key: "onKeyDown",
-    value: function onKeyDown(e) {
-      try {
-        // console.log(e.which, e.key);
-        var key = "".concat(e.which, " ").concat(e.key);
-
-        if (this.vr.mode !== _vr.VR_MODE.NONE || _const.TEST_ENABLED) {
-          this.controllers.setText(key);
-
-          switch (e.keyCode) {
-            case 37:
-              // left
-              this.controllers.menu.prev();
-              break;
-
-            case 38:
-              // up
-              this.controllers.menu.exit();
-              break;
-
-            case 40:
-              // down
-              this.controllers.menu.enter();
-              break;
-
-            case 39:
-              // right
-              this.controllers.menu.next();
-              break;
-          }
-        } else {
-          this.debugInfo.innerHTML = key;
-        }
-      } catch (error) {
-        this.debugInfo.innerHTML = error;
-      }
-    }
-  }, {
-    key: "onMouseDown",
-    value: function onMouseDown(event) {
-      if (_const.TEST_ENABLED) {
-        // this.dragListener.start();
-        this.controllers.setText('down');
-        return;
-      }
-
-      try {
-        this.mousedown = true;
-        var raycaster = this.raycaster; // update the picking ray with the camera and mouse position
-
-        raycaster.setFromCamera(this.mouse, this.camera); // calculate objects intersecting the picking ray
-
-        if (event.shiftKey) {
-          var intersections = raycaster.intersectObjects(this.pivot.room.children);
-
-          if (intersections) {
-            var intersection = intersections.find(function (x) {
-              return x !== undefined;
-            });
-            this.createPoint(intersection);
-          } // console.log(intersections);
-
-          /*
-          for (var i = 0; i < intersects.length; i++ ) {
-          	console.log(intersections[i])
-          	intersects[i].object.material.color.set( 0xff0000 );
-          }
-          */
-
-        }
-        /* else if (this.points) {
-        	raycaster.params.Points.threshold = 10.0;
-        	const intersections = raycaster.intersectObjects(this.points.children);
-        	if (intersections) {
-        		const intersection = intersections.find(x => x !== undefined);
-        		if (intersection) {
-        			const index = intersection.index;
-        			const point = intersection.point;
-        			const debugInfo = `${index} => {${point.x}, ${point.y}, ${point.z}}`;
-        			// console.log(index, point, debugInfo);
-        			this.debugInfo.innerHTML = debugInfo;
-        			this.pivot.index = (this.pivot.index + 1) % this.pivot.views.length;
-        		}
-        	}
-        } */
-
-      } catch (error) {
-        this.debugInfo.innerHTML = error;
-      }
-    }
-  }, {
-    key: "onMouseMove",
-    value: function onMouseMove(event) {
-      try {
-        var w2 = this.container.offsetWidth / 2;
-        var h2 = this.container.offsetHeight / 2;
-        this.mouse = {
-          x: (event.clientX - w2) / w2,
-          y: -(event.clientY - h2) / h2
-        };
-
-        if (_const.TEST_ENABLED) {
-          return this.controllers.updateTest(this.mouse);
-        }
-
-        var raycaster = this.raycaster;
-        raycaster.setFromCamera(this.mouse, this.camera);
-
-        _interactive.default.hittest(raycaster, this.mousedown);
-      } catch (error) {
-        this.debugInfo.innerHTML = error;
-      }
-    }
-  }, {
-    key: "onMouseUp",
-    value: function onMouseUp(event) {
-      if (_const.TEST_ENABLED) {
-        // this.dragListener.end();
-        this.controllers.setText('up');
-        return;
-      }
-
-      this.mousedown = false;
-    }
-  }, {
-    key: "onMouseWheel",
-    value: function onMouseWheel(event) {
-      try {
-        var camera = this.camera;
-        var fov = camera.fov + event.deltaY * 0.01;
-        camera.fov = THREE.Math.clamp(fov, 30, 75);
-        camera.updateProjectionMatrix();
-      } catch (error) {
-        this.debugInfo.innerHTML = error;
-      }
-    }
-  }, {
-    key: "onSave",
-    value: function onSave(event) {
-      try {
-        this.view.orientation = this.orbit.getOrientation();
-        this.saveData({
-          views: this.pivot.views
-        }, 'vr.json');
-      } catch (error) {
-        this.debugInfo.innerHTML = error;
-      }
-    } // animation
-
-  }, {
-    key: "updatePointer",
-    value: function updatePointer(raycaster) {
-      var intersections = raycaster.intersectObjects(this.pivot.room.children);
-
-      if (intersections.length) {
-        var intersection = intersections[0]; // const intersection = intersections.find(x => x !== undefined);
-
-        if (intersection) {
-          // const index = intersection.index;
-          // const point = intersection.point;
-          // const debugInfo = `${index} => {${point.x}, ${point.y}, ${point.z}}`;
-          // console.log(index, point, debugInfo);
-          // this.debugInfo.innerHTML = debugInfo;
-          // console.log(intersection.point);
-          var position = intersection.point.normalize().multiplyScalar(_const.POINTER_RADIUS);
-          position = this.pivot.worldToLocal(position);
-          this.pointer.position.set(position.x, position.y, position.z);
-          this.pointer.lookAt(_const.ORIGIN); // console.log(position.x, position.y, position.z);
-        }
-      }
-
-      if (this.controllers) {
-        this.pointer.material.color.setHex(this.controllers.gamepads.button ? 0x0000ff : 0xffffff);
-        this.pointer.material.opacity = this.controllers.gamepads.button ? 1.0 : 0.5;
-      }
-
-      this.pointer.scale.setScalar(this.pivot.busy ? 0 : 1); // this.pivot.rotation.y = (this.pivot.ery || 0);
-      // this.pivot.rotation.y += ((this.pivot.ery || 0) - this.pivot.rotation.y) / 10;
-    }
-  }, {
-    key: "updateCamera",
-    value: function updateCamera() {
-      var orbit = this.orbit;
-      var camera = this.camera;
-      orbit.update();
-      camera.target.x = _const.ROOM_RADIUS * Math.sin(orbit.phi) * Math.cos(orbit.theta);
-      camera.target.y = _const.ROOM_RADIUS * Math.cos(orbit.phi);
-      camera.target.z = _const.ROOM_RADIUS * Math.sin(orbit.phi) * Math.sin(orbit.theta);
-      camera.lookAt(camera.target);
-      /*
-      // distortion
-      camera.position.copy( camera.target ).negate();
-      */
-    }
-  }, {
-    key: "updateController",
-    value: function updateController() {
-      try {
-        var controllers = this.controllers;
-        var controller = controllers.controller;
-
-        if (controller) {
-          var raycaster = this.raycaster;
-          var position = controller.position;
-          var rotation = controller.getWorldDirection(controllers.controllerDirection).multiplyScalar(-1);
-          raycaster.set(position, rotation);
-
-          var hit = _interactive.default.hittest(raycaster, controllers.gamepads.button);
-
-          if (hit && hit !== this.pivot.room.sphere) {
-            controllers.hapticFeedback();
-          } // this.updatePointer(raycaster);
-
-        }
-      } catch (error) {
-        this.debugInfo.innerHTML = error;
-      }
-    } // utils
-
-  }, {
-    key: "saveData",
-    value: function saveData(data) {
-      var filename = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'console.json';
-
-      if (!data) {
-        console.error('Console.save: No data');
-        return;
-      }
-
-      if (_typeof(data) === 'object') {
-        data = JSON.stringify(data, undefined, 4);
-      }
-
-      var blob = new Blob([data], {
-        type: 'text/json'
-      });
-      var event = document.createEvent('MouseEvents');
-      var anchor = document.createElement('a');
-      anchor.download = filename;
-      anchor.href = window.URL.createObjectURL(blob);
-      anchor.dataset.downloadurl = ['text/json', anchor.download, anchor.href].join(':');
-      event.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-      anchor.dispatchEvent(event);
-    }
   }]);
 
   return webvr;
 }();
 
 var tour = new webvr();
-tour.animate(); // tour.load('data/vr.json');
-
-/*
-
-copyGeometry() {
-	var MAX_POINTS = 500;
-	// geometry
-	var geometry = new THREE.BufferGeometry();
-	// attributes
-	var positions = new Float32Array(MAX_POINTS * 3); // 3 vertices per point
-	geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
-	// draw range
-	var drawCount = 2; // draw the first 2 points, only
-	geometry.setDrawRange(0, drawCount);
-	// material
-	var material = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 2 });
-	// line
-	var line = new THREE.Line(geometry, material);
-	scene.add(line);
-	// And then to later update after adding new point information:
-	line.geometry.setDrawRange(0, newValue);
-}
-
-doParallax() {
-	// parallax
-	const parallax = this.parallax;
-	parallax.x += (this.mouse.x - parallax.x) / 8;
-	parallax.y += (this.mouse.y - parallax.y) / 8;
-	// this.light1.position.set(parallax.x * 5.0, 6.0 + parallax.y * 2.0, 4.0);
-	// this.light2.position.set(parallax.x * -5.0, -6.0 - parallax.y * 2.0, 4.0);
-}
-
-const shaderPoint = {
-	vertexShader: `
-	attribute float size;
-	attribute vec4 ca;
-	varying vec4 vColor;
-	void main() {
-		vColor = ca;
-		vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-		gl_PointSize = size * (400.0 / -mvPosition.z);
-		gl_Position = projectionMatrix * mvPosition;
-	}
-	`,
-	fragmentShader: `
-	uniform vec3 color;
-	uniform sampler2D texture;
-	varying vec4 vColor;
-	void main() {
-		vec4 textureColor = texture2D(texture, gl_PointCoord);
-		// if (textureColor.a < 0.5) discard;
-		gl_FragColor = textureColor * vec4(color * vColor.xyz, 1.0);
-		// float depth = gl_FragCoord.z / gl_FragCoord.w;
-		gl_FragColor = vec4(vec3(1.0), gl_FragColor.w);
-	}
-	`,
-};
-
-const material = new THREE.PointsMaterial({
-	size: 15,
-	map: loader.load('img/pin.png'),
-	vertexColors: THREE.VertexColors,
-	blending: THREE.AdditiveBlending,
-	depthTest: true,
-	transparent: true
-});
-*/
-
-/*
-const material = new THREE.ShaderMaterial({
-	uniforms: {
-		color: { value: new THREE.Color(0xffffff) },
-		texture: { value: loader.load('img/pin.png') }
-	},
-	vertexColors: THREE.VertexColors,
-	blending: THREE.AdditiveBlending,
-	depthTest: true,
-	transparent: true,
-	vertexShader: shaderPoint.vertexShader,
-	fragmentShader: shaderPoint.fragmentShader,
-	alphaTest: 0.9
-});
-*/
-
-/*
-	addPoints_(parent) {
-		const loader = new THREE.TextureLoader();
-		const geometry = new THREE.BufferGeometry();
-		// hack fix
-		const vertices = [];
-		vertices.push(0, -10000, 0);
-		vertices.push(0, 10000, 0);
-		geometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-		// hack fix
-		const colors = new Array(100 * 3).fill(0);
-		const colorsAttribute = new THREE.Float32BufferAttribute(colors, 3);
-		const sizes = new Array(100).fill(10);
-		geometry.addAttribute('color', colorsAttribute);
-		geometry.addAttribute('customColor', new THREE.Float32BufferAttribute(colors, 3));
-		geometry.addAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
-		const material = new THREE.ShaderMaterial({
-			uniforms: {
-				amplitude: { value: 1.0 },
-				color: { value: new THREE.Color(0xffffff) },
-				texture: { value: loader.load('img/pin.png') }
-			},
-			vertexShader: shaderPoint.vertexShader,
-			fragmentShader: shaderPoint.fragmentShader,
-			transparent: true
-		});
-		// materials[i].color.setHSL(1, 0, 0);
-		const points = new THREE.Points(geometry, material);
-		points.vertices = vertices;
-		points.colors = colors;
-		points.colorsAttribute = colorsAttribute;
-		points.scale.set(0.95, 0.95, 0.95);
-		parent.add(points);
-		return points;
-	}
-
-	addPoint_(position, i) {
-		const points = this.points;
-		const geometry = points.geometry;
-		const vertices = points.vertices;
-		const index = vertices.length / 3;
-		vertices.push(position.x, position.y, position.z);
-		geometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-		const colorsAttribute = points.colorsAttribute;
-		colorsAttribute.setXYZ(index, 0, 0, 0);
-		points.material.needsUpdate = true;
-		// console.log(index, 'start');
-		const from = { opacity: 0 };
-		TweenMax.to(from, 0.7, {
-			opacity: 1,
-			delay: 0.1 * i,
-			ease: Power2.easeInOut,
-			onUpdate: () => {
-				// console.log(index, from.opacity);
-				colorsAttribute.setXYZ(index, from.opacity, from.opacity, from.opacity);
-				colorsAttribute.needsUpdate = true;
-				points.material.needsUpdate = true;
-			},
-			onCompleted: () => {
-				// console.log(index, 'completed');
-			}
-		});
-	}
-
-	removePoint_(i) {
-		return new Promise((resolve, reject) => {
-			const points = this.points;
-			const geometry = points.geometry;
-			const vertices = points.vertices;
-			const index = vertices.length / 3;
-			const colorsAttribute = points.colorsAttribute;
-			colorsAttribute.setXYZ(index, 1, 1, 1);
-			points.material.needsUpdate = true;
-			// console.log(index, 'start');
-			const from = { opacity: 1 };
-			TweenMax.to(from, 0.7, {
-				opacity: 0,
-				delay: 0.0 * i,
-			ease: Power2.easeInOut,
-				onUpdate: () => {
-					// console.log(index, from.opacity);
-					colorsAttribute.setXYZ(index, from.opacity, from.opacity, from.opacity);
-					colorsAttribute.needsUpdate = true;
-					points.material.needsUpdate = true;
-				},
-				onCompleted: () => {
-					// console.log(index, 'completed');
-					vertices.splice(vertices.length - 3, 3);
-					geometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-					resolve();
-				}
-			});
-		});
-	}
-
-	createPoint_(intersection) {
-		// console.log(intersection);
-		const position = intersection.point.clone();
-		this.addPoint(this.points, position, 0);
-		this.view.points.push({
-			id: 2,
-			position: position.toArray(),
-			type: 1,
-			name: 'Point 2',
-			key: 'POINT2',
-		});
-		// p.multiplyScalar(1);
-	}
-
-
-let camera;
-if (USE_ORTHO) {
-	const width = 10;
-	const height = width / this.container.offsetWidth * this.container.offsetHeight;
-	camera = new THREE.OrthographicCamera(-width, width, height, -height, 0.01, 1000);
-} else {
-	camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 1000);
-}
-// const camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 0.01, 1000);
-camera.position.set(0, 5.0, 12.0);
-camera.up = new THREE.Vector3(0, 0, -1);
-camera.lookAt(new THREE.Vector3(0, 0, 0));
-this.camera = camera;
-*/
-
-/*
-const ambient = new THREE.AmbientLight(0x222222);
-scene.add(ambient);
-this.ambient = ambient;
-*/
-
-/*
-// color : Integer, intensity : Float, distance : Number, decay : Float
-const light = new THREE.PointLight(0xffffff, 1000, 1000, 1);
-light.position.set(0, 0, 0);
-scene.add(light);
-this.light = light;
-*/
-
-/*
-let light1;
-light1 = new THREE.DirectionalLight(0xffffff, 4.0);
-// light1.castShadow = true;
-// light1.shadowCameraVisible = true;
-// light1.mapSize.width = 2048;
-// light1.mapSize.height = 2048;
-scene.add(light1);
-this.light1 = light1;
-if (SHOW_HELPERS) {
-	const light1Helper = new THREE.DirectionalLightHelper(light1, 1);
-	scene.add(light1Helper);
-}
-const light2 = new THREE.DirectionalLight(0xffffff, 4.0);
-scene.add(light2);
-this.light2 = light2;
-if (SHOW_HELPERS) {
-	const light2Helper = new THREE.DirectionalLightHelper(light2, 1);
-	scene.add(light2Helper);
-}
-*/
+tour.animate();
 
 },{"./const":2,"./interactive/interactive.mesh":8,"./orbit/orbit":13,"./views/views":14,"./vr/controllers":15,"./vr/vr":17}]},{},[18]);
 //# sourceMappingURL=webvr.js.map

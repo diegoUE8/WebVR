@@ -16,21 +16,6 @@ export default class Controllers extends Emittable {
 		this.scene = scene;
 		this.pivot = pivot;
 		this.controllerDirection = new THREE.Vector3();
-		if (TEST_ENABLED) {
-			const right = this.right = this.addControllerTest(scene);
-			document.addEventListener('mousedown', this.onRightSelectStart);
-			document.addEventListener('mouseup', this.onRightSelectEnd);
-			const group = new THREE.Group();
-			const menu = this.menu = new Menu(group);
-			menu.on('down', (event) => {
-				this.onMenuDown(event);
-			});
-			group.rotation.set(Math.PI / 2, 0, 0);
-			group.position.set(0, 0, -2);
-			group.scale.set(5, 5, 5);
-			pivot.add(group);
-		}
-		console.log('controllers');
 		const text = this.text = this.addText(pivot);
 		const gamepads = this.gamepads = this.addGamepads();
 	}
@@ -45,10 +30,6 @@ export default class Controllers extends Emittable {
 			const controller = this.addController(this.renderer, this.scene, gamepad);
 			if (gamepad.hand === GAMEPAD_HANDS.LEFT) {
 				this.left = controller;
-				const menu = this.menu = new Menu(controller);
-				menu.on('down', (event) => {
-					this.onMenuDown(event);
-				});
 			} else {
 				this.right = controller;
 			}
@@ -69,13 +50,10 @@ export default class Controllers extends Emittable {
 					// 0 trigger, 1 front, 2 side, 3 Y, 4 X
 					switch (button.index) {
 						case 1:
-							this.menu.exit();
 							break;
 						case 2:
-							this.menu.enter();
 							break;
 						case 3:
-							// this.menu.next();
 							break;
 					}
 					break;
@@ -109,73 +87,8 @@ export default class Controllers extends Emittable {
 		}
 	}
 
-	onMenuDown(event) {
-		const item = event.item;
-		const index = event.index;
-		// console.log('Controllers.onMenuDown', item, index);
-		if (index === 0 || index === 2) {
-			const direction = index === 0 ? -1 : 1;
-			const y = this.pivot.rotation.y + Math.PI / 2 * direction;
-			// this.pivot.ery = y;
-			this.pivot.busy = true;
-			TweenMax.to(this.pivot.rotation, 0.7, {
-				y,
-				ease: Power2.easeInOut,
-				onComplete: () => {
-					this.pivot.busy = false;
-				}
-			});
-		} else if (index === 1) {
-			const panel = this.menu.addPanel();
-			if (panel) {
-				this.menu.panel = panel;
-				this.menu.next();
-				this.menu.appear(panel);
-			}
-		}
-	}
-
-	hapticFeedback() {
-		return;
-		const gamepad = this.findGamepad_(this.controller.index);
-		if (gamepad) {
-			// console.log('start');
-			/*
-			if (Tone.context.state === 'running') {
-				const feedback = this.feedback = (this.feedback || new Tone.Player('audio/feedback.mp3').toMaster());
-				feedback.start();
-			}
-			*/
-			return; // !!! care for battery
-			const actuators = gamepad.hapticActuators;
-			if (actuators && actuators.length) {
-				return actuators[0].pulse(0.1, 50);
-			} else {
-				return Promise.reject();
-			}
-		}
-	}
-
 	update() {
 		this.gamepads.update();
-	}
-
-	updateTest(mouse) {
-		const controller = this.controller;
-		if (controller) {
-			controller.rotation.y = -mouse.x * Math.PI;
-			controller.rotation.x = mouse.y * Math.PI / 2;
-		}
-	}
-
-	addControllerTest(scene) {
-		const controller = new THREE.Group();
-		controller.position.set(0, 0, 0);
-		controller.index = 0;
-		const cylinder = controller.cylinder = this.addControllerModel(controller, GAMEPAD_HANDS.RIGHT);
-		controller.scale.set(5, 5, 5);
-		scene.add(controller);
-		return controller;
 	}
 
 	addController(renderer, scene, gamepad) {
@@ -295,33 +208,6 @@ export default class Controllers extends Emittable {
 			text.position.set(0, 0, -POINTER_RADIUS);
 			this.text = text;
 			this.pivot.add(text);
-		}
-	}
-
-	findGamepad_(id) {
-		// !!! fix
-		let gamepad = this.gamepads_[id];
-		if (gamepad) {
-			return gamepad;
-		}
-		const gamepads = navigator.getGamepads && navigator.getGamepads();
-		if (!gamepads) {
-			return undefined;
-		}
-		for (var i = 0, j = 0, l = gamepads.length; i < l; i++) {
-			gamepad = gamepads[i];
-			if (gamepad && (
-					gamepad.id === 'Daydream Controller' ||
-					gamepad.id === 'Gear VR Controller' || gamepad.id === 'Oculus Go Controller' ||
-					gamepad.id === 'OpenVR Gamepad' || gamepad.id.startsWith('Oculus Touch') ||
-					gamepad.id.startsWith('Spatial Controller')
-				)) {
-				if (j === id) {
-					this.gamepads_[id] = gamepad;
-					return gamepad;
-				}
-				j++;
-			}
 		}
 	}
 
